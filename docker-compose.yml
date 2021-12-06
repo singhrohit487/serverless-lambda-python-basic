@@ -1,0 +1,29 @@
+version: "3.7"
+services:
+  localstack:
+    container_name: "${LOCALSTACK_DOCKER_NAME-localstack}"
+    image: localstack/localstack:0.12.16
+    networks:
+      - localstack-net
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,sqs,lambda,cloudformation,sts,iam,cloudwatch,apigateway,events
+      - DEBUG=1
+      - HOSTNAME_EXTERNAL=localstack
+      - DATA_DIR=/tmp/localstack/data
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - LAMBDA_EXECUTOR=docker-reuse
+      - LAMBDA_REMOTE_DOCKER=false
+      - LAMBDA_REMOVE_CONTAINERS=true
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - HOST_TMP_FOLDER=${TMPDIR}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      
+networks:
+  localstack-net:
+    external: false
+    driver: bridge
+    name: localstack-net

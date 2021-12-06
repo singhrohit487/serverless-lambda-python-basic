@@ -1,27 +1,40 @@
 service: basic-serverless-lambda-python
 
+frameworkVersion: "^2.3.0"
+
+plugins:
+  - serverless-localstack
 provider:
   name: aws
   runtime: python3.8
-  stage: dev
+  stage: ${opt:stage, 'local'}
+  lambdaHashingVersion: '20201221'
+  memorySize: 1024
+  timeout: 20
+  logRetentionInDays: 14
   region: us-east-1
-
-plugins:
-  - serverless-python-requirements
+  deploymentBucket: # when using localstack its important that before you deploy your lambda your s3 bucket already exists you can do this automatically via added your aws cli create bucket commands to the localstack-entrypoint.sh script
+    name: ${self:service}-${opt:stage}-deploy
 
 package:
-  individually: true
+  patterns:
+    - node_modules/**
+
+custom:
+  localstack:
+    stages:
+      - local
+    host: http://localhost
+    edgePort: 4566
+    debug: true
+    endpoints:
+      S3: http://localhost:4566
+      Lambda: http://localhost:4566
+    lambda:
+      mountCode: true
+    docker:
+      sudo: false
 
 functions:
-  theLambda:
-    name: test-lambda
-    handler: lambda.handler
-    description: test-lambda
-    timeout: 5 # seconds
-    memorySize: 128 # mb
-    package:
-      patterns:
-        - "!node_modules/**"
-        - "!yarn.lock"
-        - "!package-lock.json"
-        - "!package.json"
+  currentTime:
+    handler: handler.endpoint
